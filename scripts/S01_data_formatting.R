@@ -1,16 +1,8 @@
 # Script to process development time data
 
-# example data:
-eg_data <- tibble::tibble(
-  start = c("2025-08-01 10:00:00 BST", "2025-08-01 10:00:00 BST", "2025-08-01 10:00:00 BST"),
-  timepoint = c("2025-08-11 10:00:00 BST", "2025-08-11 14:00:00 BST", "2025-08-12 10:00:00 BST"),
-  o1 = c(1, 2, 3),
-  o2 = c(3,1,2),
-  b1 = c(4,5,6),
-  b2 = c(6,4,5)
-)
+#Data were formatted according to individual batches and grouped as one final dataset at the end 
 
-######batch2##########
+######batch2########
 
 #batch2constant
 # to read in real data - repeat for each of your tables
@@ -39,7 +31,7 @@ actual_data_long1 <- actual_data1 |> # pipe into:
   )
 
 
-#batch2LF
+#batch2fluctuation_small
 # to read in real data - repeat for each of your tables
 actual_data2 <- readxl::read_excel(
   path = "data/raw_data.xlsx", # match your file
@@ -65,7 +57,7 @@ actual_data_long2 <- actual_data2 |> # pipe into:
     batch = "2"
   )
 
-#batch2HF
+#batch2fluctuation_big
 # to read in real data - repeat for each of your tables
 actual_data3 <- readxl::read_excel(
   path = "data/raw_data.xlsx", # match your file
@@ -93,7 +85,7 @@ actual_data_long3 <- actual_data3 |> # pipe into:
 
 
 
-######batch3##########
+######batch3#######
 
 #batch3constant
 # to read in real data - repeat for each of your tables
@@ -176,7 +168,7 @@ actual_data_long6 <- actual_data6 |> # pipe into:
 
 
 
-######batch4##########
+######batch4#######
 
 #batch4constant
 # to read in real data - repeat for each of your tables
@@ -275,7 +267,9 @@ full_table  <- dplyr::bind_rows(
   actual_data_long9
 )
 
-#changing the original labelling of vials into corresponding genotypes
+
+#changing the original labels of vials into corresponding genotypes
+library(dplyr)
 actual_full_table <- full_table %>%
   mutate(genotype = case_when(
     genotype == "O" ~ "tT",
@@ -284,6 +278,7 @@ actual_full_table <- full_table %>%
     genotype == "B" ~ "mM"
 ))
 
-#make excel
+#make final excel
+library(writexl)
 write_xlsx(actual_full_table, "reformat_data.xlsx")
 

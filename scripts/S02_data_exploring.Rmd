@@ -1,0 +1,109 @@
+---
+title: "data_exploring"
+author: "daisy"
+date: "2025-08-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Data Exploring
+
+There are two main ways of analysing the developmental time data we collected: by vials, and by individual flies.
+
+we look for the following:
+- does development time in general differ across different conditions? - comparing mean?
+- does any genotype always / more likely to develop quicker than others? - comparing mean?
+
+If we focus on data analysis by vials:
+- we can also calculate the survival rates for each vial.
+
+## Data import
+
+```{r block1, echo=FALSE}
+#Importing data 
+library(readxl)
+reformat_data <- read_excel("/Users/day/Documents/Year 2/Summer Project/Project/FLY/data/reformat_data.xlsx")
+```
+
+## Data Analysis by Individual Flies
+
+Eliminating the rows where emerged==0.
+```{r block2, echo=FALSE}
+reformat_data1 <- reformat_data[reformat_data$emerged != 0, ]
+```
+
+Performing the uncount function to create a refined table 
+```{r block3, echo=FALSE}
+library(tidyr)
+individual_fly_data <- uncount(reformat_data1, emerged)
+
+library(writexl)
+write_xlsx(individual_fly_data, "individual_fly_data.xlsx")
+
+```
+
+## Expected graphs ideas
+
+A brief idea of one way to do this is by creating three main graphs, one for each condition. In each graph, the y-axis is the development time, whereas the x-axis will indicate the genotype+conditions. If I am right to think about it, it should be like a histogram. I assume we will then colour the bars accordingly to the different genotypes.
+
+Alternatively, we can group all of them into one graph.
+
+## Data Analysis by Vials -- Survival Rates
+
+Taking the sum of fly count in each vial, dividing by 20 (the expected total number = number of eggs default)
+*When there is exceptions of having fly count > 20, we take 100% survival
+
+We will have to make a new table with columns: genotype, vial, batch, fly count=survive
+
+We are likely to make a e.g. boxplot. 
+
+To statistically support the boxplot, we need to also add a column, fail, to be able to do binomial test
+
+```{r block4, echo=FALSE}
+
+#generating fly count total for each vial
+
+survival_data 
+
+
+```
+
+```{r block5, echo=FALSE}
+
+#calculating the survival rates for each vial
+
+```
+
+
+```{r block6, echo=FALSE}
+
+#plotting
+
+```
+
+
+
+
