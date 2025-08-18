@@ -1,0 +1,62 @@
+---
+title: "individual_fly_analysis"
+author: "daisy"
+date: "2025-08-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data importing
+
+```{r block1, echo=FALSE}
+#Importing data 
+library(readxl)
+individual_fly_data <- read_excel("/Users/day/Documents/Year 2/Summer Project/Project/FLY/data/individual_fly_data.xlsx")
+```
+
+## Data plotting
+To make the order of the four genotypes and the three treatment consistent.
+```{r block2, echo=FALSE}
+#Changing order of genotype
+unique(individual_fly_data$genotype)
+individual_fly_data$genotype <- factor(
+  individual_fly_data$genotype,
+  levels = c("tT", "mT", "tM", "mM")
+  )
+
+#Changing order of treatment
+unique(individual_fly_data$treatment)
+individual_fly_data$treatment <- factor(
+  individual_fly_data$treatment,
+  levels = c("constant", "fluctuation_small", "fluctuation_big")
+  )
+
+```
+
+Plotting a boxplot:
+```{r block3, echo=FALSE}
+library(ggplot2)
+
+ggplot(individual_fly_data, aes(x=treatment, y=dev_time, fill=genotype)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  scale_fill_manual(values = c(
+    "tT" = "orange",
+    "mT" = "yellow",
+    "tM" = "lightgreen",
+    "mM" = "skyblue"
+  )) + 
+  xlab("Genotype at Different Treatments") +
+  ylab("Developmental Time (Hours)") +
+  ggtitle("Developmental Time by Genotype and Treatments")
+
+```
+#Statistical analysis
+
+Perform a two-way ANOVA to test the main effects of genotype and treatment and their interaction.
+```{r block4, echo=FALSE}
+anova_result <- aov(dev_time ~ genotype * treatment, data = individual_fly_data)
+summary(anova_result)
+```
