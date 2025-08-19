@@ -37,3 +37,64 @@ library(writexl)
 write_xlsx(survival_data, "survival_results.xlsx")
 ```
 
+#Plotting
+Plotting a boxplot:
+```{r block4, echo=FALSE}
+#Changing order of genotype
+unique(survival_data$genotype)
+survival_data$genotype <- factor(
+  survival_data$genotype,
+  levels = c("tT", "mT", "tM", "mM")
+  )
+
+#Changing order of treatment
+unique(survival_data$treatment)
+survival_data$treatment <- factor(
+  survival_data$treatment,
+  levels = c("constant", "fluctuation_small", "fluctuation_big")
+  )
+
+```
+
+```{r block5, echo=FALSE}
+library(ggplot2)
+
+ggplot(survival_data, aes(x=treatment, y=survival_score, fill=genotype)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  scale_fill_manual(values = c(
+    "tT" = "orange",
+    "mT" = "yellow",
+    "tM" = "lightgreen",
+    "mM" = "skyblue"
+  )) + 
+  xlab("Genotype at Different Treatments") +
+  ylab("Survival Score") +
+  ggtitle("Survival Score by Genotype and Treatments")
+
+```
+
+Trying to do some stats test
+Considering the emerged flies to be binomial outcomes.
+
+1. Dealing with those fly counts with errors involved (where fly counts >20)
+``` {r block6, echo= FALSE}
+survival_data <- survival_data %>%
+  mutate(
+    adults_capped = pmin(adults, 20),
+    flagged_error = adults >20
+  )
+```
+
+2. Calculating the number of flies failed
+```{r block7, echo=FALSE}
+survival_data <- survival_data %>%
+  mutate(
+    fail = 20 - adults_capped
+  )
+```
+
+Binomial testing
+```{r block8, echo=FALSE}
+
+```
+
