@@ -1,0 +1,39 @@
+---
+title: "survival_data"
+author: "daisy"
+date: "2025-08-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data importing
+
+```{r block1, echo=FALSE}
+#Importing data 
+library(readxl)
+survival_data <- read_excel("/Users/day/Documents/Year 2/Summer Project/Project/FLY/data/survival_data.xlsx")
+```
+
+#Survival rate
+Calculating survival rates by dividing number of fly count (emerge) per vial by 20 (expected total number of flies = number of eggs present in each vial)
+```{r block2, echo=FALSE}
+survival_data <- survival_data %>%
+  mutate(survival = adults / 20) 
+```
+
+#Survival score
+Due to individual errors when conducting the experiments, e.g. where more than 20 eggs are accidentally put into vials, we transfer the survival rates into "survival scores". The survival scores refines survival rates > 1 to just 1.00 (100%). This is allowed due to considering the fact that if more than 20 flies are emerged per vial, the vial should already shown evidence of (very) high survival.
+```{r block2, echo=FALSE}
+survival_data <- survival_data %>%
+  mutate(survival_score = pmin(survival, 1)) 
+```
+
+#Export a copy of the dataset to results (calculated survival scores)
+```{r blcok3, echo=FALSE}
+library(writexl)
+write_xlsx(survival_data, "survival_results.xlsx")
+```
+
