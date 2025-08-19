@@ -83,26 +83,21 @@ We are likely to make a e.g. boxplot.
 To statistically support the boxplot, we need to also add a column, fail, to be able to do binomial test
 
 ```{r block4, echo=FALSE}
-
 #generating fly count total for each vial
+library(dplyr)
 
-survival_data 
+survival_data  <- reformat_data %>%
+  group_by(genotype, vial, treatment, batch) %>%
+  summarise(adults = sum(emerged), .groups = "drop")
 
-
-```
-
-```{r block5, echo=FALSE}
-
-#calculating the survival rates for each vial
-
-```
-
-
-```{r block6, echo=FALSE}
-
-#plotting
+library(writexl)
+write_xlsx(survival_data, "survival_data.xlsx")
 
 ```
+
+
+
+
 
 
 
