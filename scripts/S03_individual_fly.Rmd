@@ -84,8 +84,40 @@ ggplot(individual_fly_data, aes(x = treatment, y = dev_time, fill = genotype)) +
 *Per condition:
 The SD bars overlap quite a lot - which mean in terms of the spread of data, there might not be a huge difference across genotypes
 
-However, the means are different (and are significantly different evidenced by teh TukeyHSD below)
+However, the means are different (and are significantly different evidenced by the TukeyHSD below)
 
+#Trying violin plot instead
+This potentially allow better show of the distributions + give more information to the fluctuation_big (with a much larger range than the other two treatments)
+
+```{r block9, echo=FALSE}
+library(ggplot2)
+
+ggplot(individual_fly_data, aes(x = treatment, y = dev_time, fill = genotype)) +
+  geom_violin(position = position_dodge(width = 0.8), trim = FALSE) +  # Violin plot
+  stat_summary(
+    fun = mean,
+    fun.min = function(x) mean(x) - sd(x),
+    fun.max = function(x) mean(x) + sd(x),
+    geom = "errorbar",
+    width = 0.2,
+    position = position_dodge(width = 0.8),
+    color = "black"
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    position = position_dodge(width = 0.8),
+    color = "black",
+    size = 2
+  ) +
+  scale_fill_manual(values = colour_palette) +
+  xlab("Genotype at Different Treatments") +
+  ylab("Developmental Time (Hours)") +
+  ggtitle("Developmental Time by Genotype and Treatments") +
+  theme_minimal()
+
+
+```
 
 #Statistical analysis
 Perform a two-way ANOVA to test the main effects of genotype and treatment and their interaction.
@@ -139,6 +171,7 @@ names(anova_results2) <- unique_treatments
 anova_results2
 
 ```
+
 # Running follow-up tukeyHSD for each condition
 ```{r block7, echo=FALSE}
 
