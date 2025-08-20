@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+source("/Users/day/Documents/Year 2/Summer Project/Project/FLY/scripts/S00_data_source.R")
+
 # Data importing
 
 ```{r block1, echo=FALSE}
@@ -56,20 +58,46 @@ survival_data$treatment <- factor(
 
 ```
 
+
 ```{r block5, echo=FALSE}
 library(ggplot2)
 
 ggplot(survival_data, aes(x=treatment, y=survival_score, fill=genotype)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
-  scale_fill_manual(values = c(
-    "tT" = "orange",
-    "mT" = "yellow",
-    "tM" = "lightgreen",
-    "mM" = "skyblue"
-  )) + 
+  scale_fill_manual(values = colour_palette) + 
   xlab("Genotype at Different Treatments") +
   ylab("Survival Score") +
   ggtitle("Survival Score by Genotype and Treatments")
+
+```
+
+Adding mean and sd bars:
+```{r block10, echo=FALSE}
+library(ggplot2)
+
+ggplot(survival_data, aes(x = treatment, y = survival_score, fill = genotype)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  stat_summary(
+    fun = mean,
+    fun.min = function(x) mean(x) - sd(x),
+    fun.max = function(x) mean(x) + sd(x),
+    geom = "errorbar",
+    width = 0.2,
+    position = position_dodge(width = 0.8),
+    color = "black"
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    position = position_dodge(width = 0.8),
+    color = "black",
+    size = 2
+  ) +
+  scale_fill_manual(values = colour_palette) +
+  xlab("Genotype at Different Treatments") +
+  ylab("Survival Score") +
+  ggtitle("Survival Score by Genotype and Treatments")
+
 
 ```
 
@@ -95,6 +123,24 @@ survival_data <- survival_data %>%
 
 Binomial testing
 ```{r block8, echo=FALSE}
-
+survival_data <- survival_data %>%
+  rowwise() %>%
+  mutate(
+    p_value = binom.test(adults_capped, n=20, p=0.5)$p.value
+  ) %>%
+  ungroup()
 ```
+
+Indicating significance
+```{r block9, echo=FALSE}
+survival_data <- survival_data %>%
+  mutate(significant = ifelse(p_value <0.05, TRUE, FALSE)
+  )
+```
+
+The mass majority of vials show significant results, indicating that most vials have significantly different survival vs fail results. Most vials have more survived individuals than expected.
+
+I am unsure of if we should change the p=0.5 to some other values (but what values?) to make it more reasonable as a comparing probability.
+
+
 
