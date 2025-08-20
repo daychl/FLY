@@ -69,9 +69,24 @@ tukey_results <- TukeyHSD(anova_result)
 
 Trying to save the ouput into an excel file
 ```{r block5, echo=FALSE}
-geno_results <- as.data.frame(tukey_results$genotype)
-treat_results <- as.data.frame(tukey_results$treatment)
-inter_results <- as.data.frame(tukey_results$`genotype:treatment`)
+geno_results <- data.frame(Comparison = rownames(tukey_results$genotype),
+                           as.data.frame(tukey_results$genotype),
+                           row.names = NULL)
+
+treat_results <- data.frame(Comparison = rownames(tukey_results$treatment),
+                            as.data.frame(tukey_results$treatment),
+                            row.names = NULL)
+
+inter_results <- data.frame(Comparison = rownames(tukey_results$`genotype:treatment`),
+                            as.data.frame(tukey_results$`genotype:treatment`),
+                            row.names = NULL)
+tukey_list <- list(
+  Genotype = geno_results,
+  Treatment = treat_results,
+  Interaction = inter_results
+)
+
+write_xlsx(tukey_list, "TukeyHSD_results.xlsx")
 
 
 ```
