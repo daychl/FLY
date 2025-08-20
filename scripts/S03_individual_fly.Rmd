@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+source("/Users/day/Documents/Year 2/Summer Project/Project/FLY/scripts/S00_data_source.R")
+
 ## Data importing
 
 ```{r block1, echo=FALSE}
@@ -42,12 +44,7 @@ library(ggplot2)
 
 ggplot(individual_fly_data, aes(x=treatment, y=dev_time, fill=genotype)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +
-  scale_fill_manual(values = c(
-    "tT" = "orange",
-    "mT" = "yellow",
-    "tM" = "lightgreen",
-    "mM" = "skyblue"
-  )) + 
+  scale_fill_manual(values = colour_palette) + 
   xlab("Genotype at Different Treatments") +
   ylab("Developmental Time (Hours)") +
   ggtitle("Developmental Time by Genotype and Treatments")
@@ -55,8 +52,42 @@ ggplot(individual_fly_data, aes(x=treatment, y=dev_time, fill=genotype)) +
 ```
 Those for the fluctuation big are across much bigger range is due to the fact that many of the flies from high fluctuation tends to emerge on a Friday, followed by a Monday count after the weekend.
 
-#Statistical analysis
+Trying to put some sd bars on the plot:
+```{r block8, echo=FALSE}
+library(ggplot2)
 
+ggplot(individual_fly_data, aes(x = treatment, y = dev_time, fill = genotype)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +
+  stat_summary(
+    fun = mean,
+    fun.min = function(x) mean(x) - sd(x),
+    fun.max = function(x) mean(x) + sd(x),
+    geom = "errorbar",
+    width = 0.2,
+    position = position_dodge(width = 0.8),
+    color = "black"
+  ) +
+  stat_summary(
+    fun = mean,
+    geom = "point",
+    position = position_dodge(width = 0.8),
+    color = "black",
+    size = 2
+  ) +
+  scale_fill_manual(values = colour_palette) +
+  xlab("Genotype at Different Treatments") +
+  ylab("Developmental Time (Hours)") +
+  ggtitle("Developmental Time by Genotype and Treatments")
+
+```
+
+*Per condition:
+The SD bars overlap quite a lot - which mean in terms of the spread of data, there might not be a huge difference across genotypes
+
+However, the means are different (and are significantly different evidenced by teh TukeyHSD below)
+
+
+#Statistical analysis
 Perform a two-way ANOVA to test the main effects of genotype and treatment and their interaction.
 ```{r block4, echo=FALSE}
 anova_result <- aov(dev_time ~ genotype * treatment, data = individual_fly_data)
@@ -91,4 +122,49 @@ write_xlsx(tukey_list, "TukeyHSD_results.xlsx")
 
 ```
 
+# Running ANOVA per condition 
+This shows whether per treatment, genotypes is the effect of altering development time
 
+```{r block6, echo=FALSE}
+
+unique_treatments <- unique(individual_fly_data$treatment)
+
+anova_results2 <- lapply(unique_treatments, function(trt) {
+  subset_data <- individual_fly_data %>% filter(treatment == trt)
+  anova_result2 <- aov(dev_time ~ genotype, data = subset_data)
+  summary(anova_result2)  # ANOVA table for this treatment
+})
+
+names(anova_results2) <- unique_treatments
+anova_results2
+
+```
+# Running follow-up tukeyHSD for each condition
+```{r block7, echo=FALSE}
+
+unique_treatments <- unique(individual_fly_data$treatment)
+
+tukey_results2 <- lapply(unique_treatments, function(trt) {
+  subset_data <- individual_fly_data %>% filter(treatment == trt)
+  aov_result <- aov(dev_time ~ genotype, data = subset_data)
+  tukey <- TukeyHSD(aov_result)
+  
+  df <- data.frame(Comparison = rownames(tukey$genotype),
+                   as.data.frame(tukey$genotype),
+                   row.names = NULL)
+  return(df)
+})
+
+write_xlsx(tukey_results2, "TukeyHSD_per_condition.xlsx")
+
+```
+
+Significant results (pair-wise):
+1. constant:
+tM-tT
+mM-tT
+tM-mT
+
+2. fluctuation_small:
+tM-tT
+mM-tT
