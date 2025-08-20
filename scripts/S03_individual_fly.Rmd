@@ -78,7 +78,7 @@ ggplot(individual_fly_data, aes(x = treatment, y = dev_time, fill = genotype)) +
   xlab("Genotype at Different Treatments") +
   ylab("Developmental Time (Hours)") +
   ggtitle("Developmental Time by Genotype and Treatments")
-
+ 
 ```
 
 *Per condition:
