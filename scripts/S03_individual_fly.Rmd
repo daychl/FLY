@@ -53,10 +53,27 @@ ggplot(individual_fly_data, aes(x=treatment, y=dev_time, fill=genotype)) +
   ggtitle("Developmental Time by Genotype and Treatments")
 
 ```
+Those for the fluctuation big are across much bigger range is due to the fact that many of the flies from high fluctuation tends to emerge on a Friday, followed by a Monday count after the weekend.
+
 #Statistical analysis
 
 Perform a two-way ANOVA to test the main effects of genotype and treatment and their interaction.
 ```{r block4, echo=FALSE}
 anova_result <- aov(dev_time ~ genotype * treatment, data = individual_fly_data)
 summary(anova_result)
+
+TukeyHSD(anova_result)
+
+tukey_results <- TukeyHSD(anova_result)
 ```
+
+Trying to save the ouput into an excel file
+```{r block5, echo=FALSE}
+geno_results <- as.data.frame(tukey_results$genotype)
+treat_results <- as.data.frame(tukey_results$treatment)
+inter_results <- as.data.frame(tukey_results$`genotype:treatment`)
+
+
+```
+
+
