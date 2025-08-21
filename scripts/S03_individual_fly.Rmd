@@ -9,14 +9,18 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
 source("/Users/day/Documents/Year 2/Summer Project/Project/FLY/scripts/S00_data_source.R")
+```
 
 ## Data importing
 
 ```{r block1, echo=FALSE}
 #Importing data 
 library(readxl)
-individual_fly_data <- read_excel("/Users/day/Documents/Year 2/Summer Project/Project/FLY/data/individual_fly_data.xlsx")
+individual_fly_data <- read_excel(
+  path = here::here("data", "individual_fly_data.xlsx")
+  )
 ```
 
 ## Data plotting
@@ -48,37 +52,56 @@ ggplot(individual_fly_data, aes(x=treatment, y=dev_time, fill=genotype)) +
   xlab("Genotype at Different Treatments") +
   ylab("Developmental Time (Hours)") +
   ggtitle("Developmental Time by Genotype and Treatments")
-
 ```
+
+```{r}
+ggsave(
+  "devtime.png",
+  plot = last_plot(),
+  path = here::here("results")
+)
+```
+
 Those for the fluctuation big are across much bigger range is due to the fact that many of the flies from high fluctuation tends to emerge on a Friday, followed by a Monday count after the weekend.
+
+#Calculating mean and sd bars
+
+```{r block10, echo=FALSE}
+summary_data <- individual_fly_data %>%
+  group_by(treatment, genotype) %>%
+  summarise(
+    mean_dev = mean(dev_time, na.rm = TRUE),
+    sd_dev   = sd(dev_time, na.rm = TRUE),
+  )
+```
 
 Trying to put some sd bars on the plot:
 ```{r block8, echo=FALSE}
-library(ggplot2)
-
-ggplot(individual_fly_data, aes(x = treatment, y = dev_time, fill = genotype)) +
-  geom_boxplot(position = position_dodge(width = 0.8)) +
-  stat_summary(
-    fun = mean,
-    fun.min = function(x) mean(x) - sd(x),
-    fun.max = function(x) mean(x) + sd(x),
-    geom = "errorbar",
+ggplot(summary_data, aes(x = treatment, y = mean_dev, colour = genotype)) +
+  geom_point(position = position_dodge(width = 0.6), size = 3) +
+  geom_errorbar(
+    aes(ymin = mean_dev - sd_dev, ymax = mean_dev + sd_dev),
     width = 0.2,
-    position = position_dodge(width = 0.8),
-    color = "black"
+    position = position_dodge(width = 0.6)
   ) +
-  stat_summary(
-    fun = mean,
-    geom = "point",
-    position = position_dodge(width = 0.8),
-    color = "black",
-    size = 2
-  ) +
-  scale_fill_manual(values = colour_palette) +
+  scale_color_manual(
+    values = colour_palette)+
   xlab("Genotype at Different Treatments") +
   ylab("Developmental Time (Hours)") +
-  ggtitle("Developmental Time by Genotype and Treatments")
- 
+  ggtitle("Mean Developmental Time (±SD) by Genotype and Treatment") +
+  theme_minimal() +
+  theme(
+    plot.background = element_rect(fill="lightgrey"),
+    panel.grid.major = element_line(colour ="lightgrey")
+  )
+```
+
+```{r}
+ggsave(
+  "devtime.png",
+  plot = last_plot(),
+  path = here::here("results")
+)
 ```
 
 *Per condition:
@@ -88,6 +111,20 @@ However, the means are different (and are significantly different evidenced by t
 
 #Trying violin plot instead
 This potentially allow better show of the distributions + give more information to the fluctuation_big (with a much larger range than the other two treatments)
+
+```{r block9, echo=FALSE}
+library(ggplot2)
+
+ggplot(individual_fly_data, aes(x = treatment, y = dev_time, fill = genotype)) +
+  geom_violin(position = position_dodge(width = 0.8), trim = FALSE) + 
+  
+  scale_fill_manual(values = colour_palette) +
+  xlab("Genotype at Different Treatments") +
+  ylab("Developmental Time (Hours)") +
+  ggtitle("Developmental Time by Genotype and Treatments") +
+  theme_minimal()
+
+```
 
 ```{r block9, echo=FALSE}
 library(ggplot2)
@@ -116,88 +153,4 @@ ggplot(individual_fly_data, aes(x = treatment, y = dev_time, fill = genotype)) +
   ggtitle("Developmental Time by Genotype and Treatments") +
   theme_minimal()
 
-
 ```
-
-#Statistical analysis
-Perform a two-way ANOVA to test the main effects of genotype and treatment and their interaction.
-```{r block4, echo=FALSE}
-anova_result <- aov(dev_time ~ genotype * treatment, data = individual_fly_data)
-summary(anova_result)
-
-TukeyHSD(anova_result)
-
-tukey_results <- TukeyHSD(anova_result)
-```
-
-Trying to save the ouput into an excel file
-```{r block5, echo=FALSE}
-geno_results <- data.frame(Comparison = rownames(tukey_results$genotype),
-                           as.data.frame(tukey_results$genotype),
-                           row.names = NULL)
-
-treat_results <- data.frame(Comparison = rownames(tukey_results$treatment),
-                            as.data.frame(tukey_results$treatment),
-                            row.names = NULL)
-
-inter_results <- data.frame(Comparison = rownames(tukey_results$`genotype:treatment`),
-                            as.data.frame(tukey_results$`genotype:treatment`),
-                            row.names = NULL)
-tukey_list <- list(
-  Genotype = geno_results,
-  Treatment = treat_results,
-  Interaction = inter_results
-)
-
-write_xlsx(tukey_list, "TukeyHSD_results.xlsx")
-
-
-```
-
-# Running ANOVA per condition 
-This shows whether per treatment, genotypes is the effect of altering development time
-
-```{r block6, echo=FALSE}
-
-unique_treatments <- unique(individual_fly_data$treatment)
-
-anova_results2 <- lapply(unique_treatments, function(trt) {
-  subset_data <- individual_fly_data %>% filter(treatment == trt)
-  anova_result2 <- aov(dev_time ~ genotype, data = subset_data)
-  summary(anova_result2)  # ANOVA table for this treatment
-})
-
-names(anova_results2) <- unique_treatments
-anova_results2
-
-```
-
-# Running follow-up tukeyHSD for each condition
-```{r block7, echo=FALSE}
-
-unique_treatments <- unique(individual_fly_data$treatment)
-
-tukey_results2 <- lapply(unique_treatments, function(trt) {
-  subset_data <- individual_fly_data %>% filter(treatment == trt)
-  aov_result <- aov(dev_time ~ genotype, data = subset_data)
-  tukey <- TukeyHSD(aov_result)
-  
-  df <- data.frame(Comparison = rownames(tukey$genotype),
-                   as.data.frame(tukey$genotype),
-                   row.names = NULL)
-  return(df)
-})
-
-write_xlsx(tukey_results2, "TukeyHSD_per_condition.xlsx")
-
-```
-
-Significant results (pair-wise):
-1. constant:
-tM-tT
-mM-tT
-tM-mT
-
-2. fluctuation_small:
-tM-tT
-mM-tT
