@@ -1,0 +1,63 @@
+---
+title: "individual_fly_variable_plot"
+author: "daisy"
+date: "2025-08-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data importing
+```{r block1, echo=FALSE}
+#Importing data 
+library(readxl)
+individual_fly_data <- read_excel(
+  path = here::here("data", "individual_fly_data.xlsx")
+  )
+```
+
+##Plotting y-axis = dev_time, x-aixs = other variables
+The plots should show if the different variables (e.g. genotypes/treatment) are having random effects / non-random effects on the dev_time. 
+
+```{r block4, echo=FALSE}
+ggplot(
+  data = individual_fly_data, 
+  mapping = aes(
+    x = batch, 
+    y = dev_time, 
+    fill = batch
+  )
+) + 
+  geom_boxplot() +
+  geom_jitter(width = 0.1, alpha = 0.5)
+```
+
+```{r block5, echo=FALSE}
+
+ggplot(
+  data = individual_fly_data, 
+  mapping = aes(
+    x = vial, 
+    y = dev_time, 
+    fill = vial
+  )
+) + 
+  geom_boxplot() +
+  geom_jitter(width = 0.1, alpha = 0.5)
+```
+
+```{r block6, echo=FALSE}
+
+ggplot(
+  data = individual_fly_data, 
+  mapping = aes(
+    x = start_date, 
+    y = dev_time, 
+    fill = start_date
+  )
+) + 
+  geom_boxplot() +
+  geom_jitter(width = 0.1, alpha = 0.5)
+```

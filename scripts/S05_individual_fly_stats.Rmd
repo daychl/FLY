@@ -1,0 +1,143 @@
+---
+title: "individual_fly_stats"
+author: "daisy"
+date: "2025-08-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Data importing
+```{r block1}
+#Importing data 
+library(readxl)
+individual_fly_data <- read_excel(
+  path = here::here("data", "individual_fly_data.xlsx")
+  )
+```
+
+#Statistical analysis
+Perform a two-way ANOVA to test the main effects of genotypes and treatment and their interaction.
+```{r block4}
+anova_result <- aov(dev_time ~ genotype * treatment, data = individual_fly_data)
+summary(anova_result)
+
+TukeyHSD(anova_result)
+
+tukey_results <- TukeyHSD(anova_result)
+```
+
+Trying to save the ouput into an excel file
+```{r block5}
+geno_results <- data.frame(Comparison = rownames(tukey_results$genotype),
+                           as.data.frame(tukey_results$genotype),
+                           row.names = NULL)
+
+treat_results <- data.frame(Comparison = rownames(tukey_results$treatment),
+                            as.data.frame(tukey_results$treatment),
+                            row.names = NULL)
+
+inter_results <- data.frame(Comparison = rownames(tukey_results$`genotype:treatment`),
+                            as.data.frame(tukey_results$`genotype:treatment`),
+                            row.names = NULL)
+tukey_list <- list(
+  Genotype = geno_results,
+  Treatment = treat_results,
+  Interaction = inter_results
+)
+
+write_xlsx(tukey_list, "TukeyHSD_results.xlsx")
+
+```
+
+# Running ANOVA per condition 
+This shows whether per treatment, genotypes is a significant effect of altering development time of flies
+
+```{r block6}
+
+unique_treatments <- unique(individual_fly_data$treatment)
+
+anova_results2 <- lapply(unique_treatments, function(trt) {
+  subset_data <- individual_fly_data %>% filter(treatment == trt)
+  anova_result2 <- aov(dev_time ~ genotype, data = subset_data)
+  summary(anova_result2)  
+})
+
+names(anova_results2) <- unique_treatments
+anova_results2
+```
+
+# Running follow-up tukeyHSD for each condition
+```{r block7}
+
+unique_treatments <- unique(individual_fly_data$treatment)
+
+tukey_results2 <- lapply(unique_treatments, function(trt) {
+  subset_data <- individual_fly_data %>% filter(treatment == trt)
+  aov_result <- aov(dev_time ~ genotype, data = subset_data)
+  tukey <- TukeyHSD(aov_result)
+  
+  df <- data.frame(Comparison = rownames(tukey$genotype),
+                   as.data.frame(tukey$genotype),
+                   row.names = NULL)
+  return(df)
+})
+
+write_xlsx(tukey_results2, "TukeyHSD_per_condition.xlsx")
+
+```
+
+Significant results (pair-wise):
+1. constant:
+tM-tT 
+mM-tT
+tM-mT
+
+2. fluctuation_small:
+tM-tT
+mM-tT
+
+*fluctuation_big does not show significant results (meaning that the development time of different genotypes do not differ significantly)
+- could potentially also due to error associated with measurement and data collection
+
+#Creating models
+Testing and comparing different models
+``` {r block8}
+genotype_model2 <- lm(dev_time ~ genotype + (1 | as.numeric(vial)), data=individual_fly_data)
+anova(genotype_model2)
+
+treatment_model <- lm(dev_time ~ treatment, data = individual_fly_data)
+anova(treatment_model)
+
+full_model <- lm(dev_time ~ genotype * treatment + (1 | as.numeric(vial)) , data = individual_fly_data)
+anova(full_model)
+
+full_model2 <- lm(dev_time ~ genotype + treatment, data = individual_fly_data)
+
+anova(full_model2, full_model)
+
+batch_model <- lm(dev_time ~ genotype * treatment + batch, data=individual_fly_data)
+
+anova(batch_model, full_model)
+
+
+```
+Main models:
+```{r}
+
+full_model <- lm(dev_time ~ genotype * treatment, data = individual_fly_data)
+
+full_model <- lm(dev_time ~ genotype * treatment + (1 | as.numeric(vial)), data = individual_fly_data)
+anova(full_model)
+
+```
+(1|vial) - vials as random variables added to the model
+/ can potentially also add (1|batch) / (1|start_date) as random variables to the model
+there are still significant results for 1) genotype and 2)treatment.
+Meaning that there is at least one genotype differ from others + one treatment differ from others
+
+
+#Further statistical tests
+estimated marginal mean
