@@ -141,3 +141,26 @@ Meaning that there is at least one genotype differ from others + one treatment d
 
 #Further statistical tests
 estimated marginal mean
+1. For pair-wise comparisons acorss genotypes within each treatment
+``` {r}
+library(emmeans) 
+
+full_model <- lm(dev_time ~ genotype * treatment, data = individual_fly_data)
+emm <- emmeans(full_model, ~ genotype | treatment) 
+emm
+
+pairs(emm)
+
+```
+
+2. For pair-wise comparison across treatments, within genotypes
+``` {r}
+library(emmeans) 
+
+full_model <- lm(dev_time ~ genotype * treatment, data = individual_fly_data)
+emm <- emmeans(full_model, ~ treatment | genotype) 
+emm
+
+pairs(emm)
+
+```
