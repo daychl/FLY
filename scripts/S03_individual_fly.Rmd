@@ -10,7 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-source("/Users/day/Documents/Year 2/Summer Project/Project/FLY/scripts/S00_data_source.R")
+library(here)
+source(here::here("scripts", "S00_data_source.R"))
 ```
 
 ## Data importing
@@ -58,7 +59,9 @@ ggplot(individual_fly_data, aes(x=treatment, y=dev_time, fill=genotype)) +
 ggsave(
   "devtime.png",
   plot = last_plot(),
-  path = here::here("results")
+  path = here::here("results"),
+  width = 10,
+  height = 7
 )
 ```
 
@@ -91,16 +94,18 @@ ggplot(summary_data, aes(x = treatment, y = mean_dev, colour = genotype)) +
   ggtitle("Mean Developmental Time (±SD) by Genotype and Treatment") +
   theme_minimal() +
   theme(
-    plot.background = element_rect(fill="lightgrey"),
-    panel.grid.major = element_line(colour ="lightgrey")
+    panel.grid.major = element_line(colour ="grey", linetype = "dotdash"),
+    plot.title = element_text(hjust = 0.6, face = "bold", size = 14)
   )
 ```
 
 ```{r}
 ggsave(
-  "devtime.png",
+  "devtime_mean2.png",
   plot = last_plot(),
-  path = here::here("results")
+  path = here::here("results"),
+  width = 10,
+  height = 7
 )
 ```
 
