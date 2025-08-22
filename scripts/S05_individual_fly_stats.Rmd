@@ -129,7 +129,8 @@ Main models:
 
 full_model <- lm(dev_time ~ genotype * treatment, data = individual_fly_data)
 
-full_model <- lm(dev_time ~ genotype * treatment + (1 | as.numeric(vial)), data = individual_fly_data)
+full_model <- lmer(dev_time ~ genotype * treatment + (1 |vial), data = individual_fly_data)
+summary(full_model)
 anova(full_model)
 
 ```
@@ -141,26 +142,20 @@ Meaning that there is at least one genotype differ from others + one treatment d
 
 #Further statistical tests
 estimated marginal mean
-1. For pair-wise comparisons acorss genotypes within each treatment
+1. For pair-wise comparisons 
 ``` {r}
 library(emmeans) 
 
 full_model <- lm(dev_time ~ genotype * treatment, data = individual_fly_data)
-emm <- emmeans(full_model, ~ genotype | treatment) 
+emm <- emmeans(full_model, ~ genotype * treatment, adjust = "BH") 
 emm
-
-pairs(emm)
-
 ```
 
-2. For pair-wise comparison across treatments, within genotypes
-``` {r}
-library(emmeans) 
-
-full_model <- lm(dev_time ~ genotype * treatment, data = individual_fly_data)
-emm <- emmeans(full_model, ~ treatment | genotype) 
-emm
-
-pairs(emm)
-
+```{r}
+pairs(emm, simple = "genotype", adjust = "BH")
 ```
+
+```{r}
+pairs(emm, simple = "treatment")
+```
+
