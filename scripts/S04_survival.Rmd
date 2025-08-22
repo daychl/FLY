@@ -9,14 +9,19 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-source("/Users/day/Documents/Year 2/Summer Project/Project/FLY/scripts/S00_data_source.R")
+```{r}
+library(here)
+source(here::here("scripts", "S00_data_source.R"))
+```
 
-# Data importing
+#Data importing
 
 ```{r block1, echo=FALSE}
 #Importing data 
 library(readxl)
-survival_data <- read_excel("/Users/day/Documents/Year 2/Summer Project/Project/FLY/data/survival_data.xlsx")
+survival_data <- read_excel(
+  path = here::here("data", "survival_data.xlsx")
+  )
 ```
 
 #Survival rate
@@ -101,46 +106,47 @@ ggplot(survival_data, aes(x = treatment, y = survival_score, fill = genotype)) +
 
 ```
 
-Trying to do some stats test
-Considering the emerged flies to be binomial outcomes.
-
-1. Dealing with those fly counts with errors involved (where fly counts >20)
-``` {r block6, echo= FALSE}
-survival_data <- survival_data %>%
-  mutate(
-    adults_capped = pmin(adults, 20),
-    flagged_error = adults >20
+#Calculating mean and sd bars
+```{r block6, echo=FALSE}
+summary_data <- survival_data %>%
+  group_by(treatment, genotype) %>%
+  summarise(
+    mean_survival = mean(survival_score, na.rm = TRUE),
+    sd_survival   = sd(survival_score, na.rm = TRUE),
   )
 ```
 
-2. Calculating the number of flies failed
+#Plotting only mean and sd bars
 ```{r block7, echo=FALSE}
-survival_data <- survival_data %>%
-  mutate(
-    fail = 20 - adults_capped
+library(ggplot2)
+
+ggplot(summary_data, aes(x=treatment, y=mean_survival, colour=genotype)) +
+geom_point(position = position_dodge(width = 0.6), size = 3) +
+  geom_errorbar(
+    aes(ymin = mean_survival - sd_survival, ymax = mean_survival + sd_survival),
+    width = 0.2,
+    position = position_dodge(width = 0.6)
+  ) +
+  scale_colour_manual(values = colour_palette) + 
+  xlab("Genotype at Different Treatments") +
+  ylab("Survival Score") +
+  ggtitle("Mean Survival Score (±SD) by Genotype and Treatments") + 
+  theme_minimal() +
+  theme(
+    plot.background = element_rect(fill="grey95"),
+    panel.grid.major = element_line(colour ="grey95"),
+    plot.title = element_text(hjust = 0.6, face = "bold", size = 14)
   )
+
 ```
 
-Binomial testing
-```{r block8, echo=FALSE}
-survival_data <- survival_data %>%
-  rowwise() %>%
-  mutate(
-    p_value = binom.test(adults_capped, n=20, p=0.5)$p.value
-  ) %>%
-  ungroup()
+```{r}
+ggsave(
+  "survival_mean.png",
+  plot = last_plot(),
+  path = here::here("results"),
+  width = 10,
+  height = 7
+)
 ```
-
-Indicating significance
-```{r block9, echo=FALSE}
-survival_data <- survival_data %>%
-  mutate(significant = ifelse(p_value <0.05, TRUE, FALSE)
-  )
-```
-
-The mass majority of vials show significant results, indicating that most vials have significantly different survival vs fail results. Most vials have more survived individuals than expected.
-
-I am unsure of if we should change the p=0.5 to some other values (but what values?) to make it more reasonable as a comparing probability.
-
-
-
+ 
